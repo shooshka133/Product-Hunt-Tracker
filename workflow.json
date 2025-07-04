@@ -1,0 +1,330 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1140,
+        100
+      ],
+      "id": "aa9c647a-44c7-4436-9311-d2f5757d2cb1",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.producthunt.com/v2/api/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer FrEuZtOEt44HcsT_2jNEmhv-Kra_CMT1M9Mwj9rXh48"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "query { posts(first: 15) { edges { node { id name tagline url createdAt votesCount user { name username } topics { edges { node { name } } } } } } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -760,
+        -40
+      ],
+      "id": "fefe4d4d-6d61-49fd-abaa-125fbffc6d62",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1pNdd5i5sN5S8YLv8ktG7zLDauiFj3c7OhevK3kfrPAE",
+          "mode": "list",
+          "cachedResultName": "product-hunt",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pNdd5i5sN5S8YLv8ktG7zLDauiFj3c7OhevK3kfrPAE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pNdd5i5sN5S8YLv8ktG7zLDauiFj3c7OhevK3kfrPAE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "Created ": "={{ $json.createdAt }}",
+            "Tagline ": "={{ $json.tagline }}",
+            "Votes": "={{ $json.votes }}",
+            "Topics": "={{ $json.topics }}",
+            "url": "={{ $json.url }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline ",
+              "displayName": "Tagline ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Votes",
+              "displayName": "Votes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created ",
+              "displayName": "Created ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Topics",
+              "displayName": "Topics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        0,
+        -20
+      ],
+      "id": "aa898e79-b089-4cc3-9525-c0b658cfdcea",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BtjViY2lEYCoWwdk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $json.data.posts.edges.map(e => {\n  const node = e.node;\n  return {\n    json: {\n      id: node.id, // ✅ Important for deduplication\n      name: node.name,\n      tagline: node.tagline,\n      votes: node.votesCount,\n      createdAt: node.createdAt,\n      url: node.url,\n      topics: node.topics.edges.map(t => t.node.name).join(', ')\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        -40
+      ],
+      "id": "2c7d36a8-30e6-4b09-9856-10f8a0f92b23",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "query": "SELECT * FROM input1\nLEFT JOIN input2 ON input1.id = input2.id\nWHERE input2.id IS NULL\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -200,
+        -20
+      ],
+      "id": "b45f41ff-12cc-4886-b19d-8b87ed9748e6",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1pNdd5i5sN5S8YLv8ktG7zLDauiFj3c7OhevK3kfrPAE",
+          "mode": "list",
+          "cachedResultName": "product-hunt",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pNdd5i5sN5S8YLv8ktG7zLDauiFj3c7OhevK3kfrPAE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pNdd5i5sN5S8YLv8ktG7zLDauiFj3c7OhevK3kfrPAE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -420,
+        120
+      ],
+      "id": "0f32de92-7abb-4299-bde3-f38511311517",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BtjViY2lEYCoWwdk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 14
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -40
+      ],
+      "id": "de6ed25a-4938-4ff2-8065-4de82133cce1",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a623d220-3f35-4d72-86ce-1067bafdcb47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7ff8cd75b8ea4538c4979fd9c77b637a72b55e066d92e04d15d75b5cc0988a31"
+  },
+  "id": "2BMr66g7JafrFEdE",
+  "tags": []
+}
